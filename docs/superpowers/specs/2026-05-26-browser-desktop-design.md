@@ -187,7 +187,7 @@ Policy file path: `/etc/opt/chrome/policies/managed/browser-desktop.json`
   "RestoreOnStartupURLs": ["file:///opt/browser-desktop/portal/index.html"],
   "BookmarkBarEnabled": false,
   "EditBookmarksEnabled": false,
-  "IncognitoModeAvailability": 2,
+  "IncognitoModeAvailability": 1,
   "DeveloperToolsAvailability": 2,
   "AllowDeletingBrowserHistory": false,
   "DownloadRestrictions": 1,
@@ -206,7 +206,7 @@ Policy file path: `/etc/opt/chrome/policies/managed/browser-desktop.json`
 |--------|-------|---------|
 | `URLBlocklist` | `["*"]` | Block all URLs by default |
 | `URLAllowlist` | URL pattern list | Only allow listed websites |
-| `IncognitoModeAvailability` | `2` | Force incognito mode (no data retained on close) |
+| `IncognitoModeAvailability` | `1` | Force incognito mode (no browsing data retained between sessions) |
 | `DeveloperToolsAvailability` | `2` | Disable DevTools (prevent bypassing restrictions) |
 | `DownloadRestrictions` | `1` | Block dangerous downloads |
 
@@ -214,9 +214,10 @@ Policy file path: `/etc/opt/chrome/policies/managed/browser-desktop.json`
 
 A local HTML portal page (`/opt/browser-desktop/portal/index.html`) serves as Chrome's homepage:
 - Clean card-style navigation listing allowed website links
-- Dynamically generates link list from whitelist configuration
+- **Statically generated**: the `browser-desktop-ctl apply` command reads `whitelist.conf` and generates `index.html` with embedded link cards — no runtime file access needed
 - Local file — loads without network access
 - Styled with minimal CSS for a professional appearance
+- Administrators can customize the template in `/opt/browser-desktop/portal/template.html`
 
 ### 4.5 Whitelist Configuration
 
@@ -420,7 +421,7 @@ bpp=24
 ## 7. Security Considerations
 
 - Users have minimal system privileges — no shell, no sudo
-- Chrome runs in forced incognito mode with no data persistence
+- Chrome runs with `--user-data-dir` for per-user profile isolation, combined with forced incognito mode (`IncognitoModeAvailability: 1`) to ensure no browsing data persists between sessions
 - Developer tools disabled to prevent policy bypass
 - URL filtering via enterprise policy is enforced at the browser level
 - xrdp uses TLS encryption for RDP connections

@@ -1,6 +1,10 @@
 #!/bin/bash
 # Common utility functions for browser-desktop installation
 
+# Include guard: prevent re-sourcing when loaded by multiple scripts
+[[ -n "${_COMMON_SH_LOADED:-}" ]] && return 0
+_COMMON_SH_LOADED=1
+
 set -e
 
 # Colors for output

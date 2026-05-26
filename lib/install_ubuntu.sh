@@ -115,11 +115,20 @@ configure_xrdp_service() {
         log_warn "ssl-cert group not found; skipping group membership"
     fi
 
-    log_info "Enabling xrdp service..."
-    systemctl enable xrdp
+    # Check if systemd is available
+    if command_exists systemctl && systemctl --version >/dev/null 2>&1; then
+        log_info "Enabling xrdp service..."
+        systemctl enable xrdp
 
-    log_info "Starting xrdp service..."
-    systemctl start xrdp
+        log_info "Starting xrdp service..."
+        systemctl start xrdp
+    elif command_exists service; then
+        log_warn "systemd not available, using 'service' command"
+        log_info "Starting xrdp service..."
+        service xrdp start
+    else
+        log_warn "No service manager found; please start xrdp manually"
+    fi
 
     log_success "xrdp service configured and started"
 }

@@ -108,20 +108,14 @@ install_chrome() {
 configure_xrdp_service() {
     log_info "Configuring xrdp service..."
 
-    # Check if systemd is available
-    if command_exists systemctl && systemctl --version >/dev/null 2>&1; then
-        log_info "Enabling xrdp service..."
-        systemctl enable xrdp
-
-        log_info "Starting xrdp service..."
-        systemctl start xrdp
-    elif command_exists service; then
-        log_warn "systemd not available, using 'service' command"
-        log_info "Starting xrdp service..."
-        service xrdp start
-    else
-        log_warn "No service manager found; please start xrdp manually"
+    # Enable xrdp to start at boot
+    if command_exists chkconfig; then
+        log_info "Enabling xrdp service at boot..."
+        chkconfig xrdp on
     fi
+
+    log_info "Starting xrdp service..."
+    service xrdp start || die "Failed to start xrdp service"
 
     log_success "xrdp service configured and started"
 }

@@ -5,9 +5,10 @@
 set -e
 
 # Resolve script directory and source common library
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Use unique variable name to avoid overwriting caller's SCRIPT_DIR when sourced
+_EULEROS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=common.sh
-source "${SCRIPT_DIR}/common.sh"
+source "${_EULEROS_DIR}/common.sh"
 
 # Chrome repo configuration for EulerOS / RHEL-based systems
 readonly CHROME_REPO_FILE="/etc/yum.repos.d/google-chrome.repo"

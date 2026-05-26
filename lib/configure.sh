@@ -4,12 +4,13 @@
 
 set -e
 
-# Resolve script directory and source common library
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+# Resolve script directory and project root
+# Use unique variable names to avoid overwriting caller's SCRIPT_DIR when sourced
+_CONFIGURE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$_CONFIGURE_DIR")"
 
 # shellcheck source=common.sh
-source "${SCRIPT_DIR}/common.sh"
+source "${_CONFIGURE_DIR}/common.sh"
 
 # Installation paths
 readonly XRDP_CONF_DIR="/etc/xrdp"

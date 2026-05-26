@@ -5,9 +5,10 @@
 set -e
 
 # Resolve script directory and source common library
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Use unique variable name to avoid overwriting caller's SCRIPT_DIR when sourced
+_UBUNTU_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=common.sh
-source "${SCRIPT_DIR}/common.sh"
+source "${_UBUNTU_DIR}/common.sh"
 
 # Chrome download URL (stable amd64)
 readonly CHROME_DEB_URL="https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"

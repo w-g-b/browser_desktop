@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_config xmlns="http://openbox.org/3.4/rc"
+                xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <!-- Window decorations -->
+  <theme>
+    <name>Clearlooks</name>
+    <titleLayout>NLIMC</titleLayout>
+    <keepBorder>no</keepBorder>
+    <animateIconify>no</animateIconify>
+  </theme>
+
+  <!-- Desktop configuration -->
+  <desktops>
+    <number>1</number>
+    <firstdesk>1</firstdesk>
+    <names>
+      <name>Browser</name>
+    </names>
+  </desktops>
+
+  <!-- Window placement -->
+  <placement>
+    <policy>Smart</policy>
+    <center>yes</center>
+    <monitor>Primary</monitor>
+  </placement>
+
+  <!-- Focus behavior -->
+  <focus>
+    <focusNew>yes</focusNew>
+    <followMouse>no</followMouse>
+    <focusLast>yes</focusLast>
+    <underMouse>no</underMouse>
+    <focusDelay>200</focusDelay>
+    <raiseOnFocus>no</raiseOnFocus>
+  </focus>
+
+  <!-- Window applications -->
+  <applications>
+    <!-- Chrome: fullscreen, no decorations -->
+    <application name="google-chrome" class="Google-chrome">
+      <decor>no</decor>
+      <fullscreen>yes</fullscreen>
+      <layer>normal</layer>
+      <desktop>1</desktop>
+    </application>
+
+    <application name="chromium" class="Chromium">
+      <decor>no</decor>
+      <fullscreen>yes</fullscreen>
+      <layer>normal</layer>
+      <desktop>1</desktop>
+    </application>
+  </applications>
+
+  <!-- Keyboard bindings (disabled for kiosk mode) -->
+  <keyboard>
+    <chainQuitKey>C-g</chainQuitKey>
+  </keyboard>
+
+  <!-- Mouse bindings (minimal) -->
+  <mouse>
+    <dragThreshold>1</dragThreshold>
+    <doubleClickTime>500</doubleClickTime>
+    <screenEdgeWarpTime>400</screenEdgeWarpTime>
+    <screenEdgeWarpMouse>false</screenEdgeWarpMouse>
+
+    <context name="Frame">
+      <!-- Disable all frame mouse actions -->
+    </context>
+
+    <context name="Titlebar">
+      <!-- Disable titlebar actions -->
+    </context>
+
+    <context name="Top">
+      <!-- Disable resize -->
+    </context>
+
+    <context name="Bottom">
+      <!-- Disable resize -->
+    </context>
+
+    <context name="Left">
+      <!-- Disable resize -->
+    </context>
+
+    <context name="Right">
+      <!-- Disable resize -->
+    </context>
+
+    <context name="Client">
+      <mousebind button="Left" action="Press">
+        <action name="Focus"/>
+      </mousebind>
+    </context>
+
+    <context name="Desktop">
+      <!-- Disable desktop right-click menu -->
+    </context>
+
+    <context name="Root">
+      <!-- Disable root window actions -->
+    </context>
+  </mouse>
+
+  <!-- Menu configuration -->
+  <menu>
+    <file>menu.xml</file>
+    <hideDelay>200</hideDelay>
+    <middle>no</middle>
+    <submenuShowDelay>100</submenuShowDelay>
+    <submenuHideDelay>400</submenuHideDelay>
+    <showIcons>no</showIcons>
+    <manageDesktops>no</manageDesktops>
+  </menu>
+
+</openbox_config>

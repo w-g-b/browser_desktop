@@ -59,24 +59,46 @@ install_chrome() {
         return 0
     fi
 
-    log_info "Downloading Google Chrome from ${CHROME_DEB_URL}..."
-    if ! wget -q -O "${CHROME_DEB_FILE}" "${CHROME_DEB_URL}"; then
-        die "Failed to download Google Chrome"
+    local chrome_deb=""
+
+    # Check if user provided a local package
+    if [[ -n "${CHROME_PACKAGE:-}" ]]; then
+        if [[ -d "$CHROME_PACKAGE" ]]; then
+            # Directory: find .deb file
+            chrome_deb=$(find "$CHROME_PACKAGE" -maxdepth 1 -name "google-chrome*.deb" -type f | head -n1)
+            if [[ -z "$chrome_deb" ]]; then
+                die "No google-chrome*.deb file found in directory: $CHROME_PACKAGE"
+            fi
+        elif [[ -f "$CHROME_PACKAGE" ]]; then
+            chrome_deb="$CHROME_PACKAGE"
+        else
+            die "Chrome package path does not exist: $CHROME_PACKAGE"
+        fi
+        log_info "Using local Chrome package: $chrome_deb"
+    else
+        # Download from Google
+        log_info "Downloading Google Chrome from ${CHROME_DEB_URL}..."
+        chrome_deb="$CHROME_DEB_FILE"
+        if ! wget -q -O "$chrome_deb" "$CHROME_DEB_URL"; then
+            die "Failed to download Google Chrome"
+        fi
     fi
 
     log_info "Installing Google Chrome..."
     wait_for_lock
-    if ! DEBIAN_FRONTEND=noninteractive apt-get install -y "${CHROME_DEB_FILE}"; then
+    if ! DEBIAN_FRONTEND=noninteractive apt-get install -y "$chrome_deb"; then
         # Attempt to fix missing dependencies
         log_warn "Fixing missing dependencies..."
         DEBIAN_FRONTEND=noninteractive apt-get install -f -y || \
             die "Failed to install Google Chrome dependencies"
-        DEBIAN_FRONTEND=noninteractive apt-get install -y "${CHROME_DEB_FILE}" || \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y "$chrome_deb" || \
             die "Failed to install Google Chrome"
     fi
 
-    # Clean up downloaded .deb
-    rm -f "${CHROME_DEB_FILE}"
+    # Clean up downloaded .deb (only if we downloaded it)
+    if [[ -z "${CHROME_PACKAGE:-}" && -f "$CHROME_DEB_FILE" ]]; then
+        rm -f "$CHROME_DEB_FILE"
+    fi
 
     log_success "Google Chrome installed"
 }

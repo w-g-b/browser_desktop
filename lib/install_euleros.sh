@@ -67,12 +67,38 @@ install_chrome() {
         return 0
     fi
 
-    log_info "Adding Google Chrome yum repository..."
-    echo "${CHROME_REPO_CONTENT}" > "${CHROME_REPO_FILE}"
+    # Check if user provided a local package
+    if [[ -n "${CHROME_PACKAGE:-}" ]]; then
+        local chrome_rpm=""
 
-    log_info "Installing Google Chrome via yum..."
-    if ! yum install -y google-chrome-stable; then
-        die "Failed to install Google Chrome"
+        if [[ -d "$CHROME_PACKAGE" ]]; then
+            # Directory: find .rpm file
+            chrome_rpm=$(find "$CHROME_PACKAGE" -maxdepth 1 -name "google-chrome*.rpm" -type f | head -n1)
+            if [[ -z "$chrome_rpm" ]]; then
+                die "No google-chrome*.rpm file found in directory: $CHROME_PACKAGE"
+            fi
+        elif [[ -f "$CHROME_PACKAGE" ]]; then
+            chrome_rpm="$CHROME_PACKAGE"
+        else
+            die "Chrome package path does not exist: $CHROME_PACKAGE"
+        fi
+
+        log_info "Using local Chrome package: $chrome_rpm"
+        if ! rpm -ivh "$chrome_rpm"; then
+            # Try to resolve dependencies
+            log_warn "Attempting to resolve dependencies..."
+            yum install -y -f || die "Failed to resolve Chrome dependencies"
+            rpm -ivh "$chrome_rpm" || die "Failed to install Google Chrome"
+        fi
+    else
+        # Install from Google repository
+        log_info "Adding Google Chrome yum repository..."
+        echo "${CHROME_REPO_CONTENT}" > "${CHROME_REPO_FILE}"
+
+        log_info "Installing Google Chrome via yum..."
+        if ! yum install -y google-chrome-stable; then
+            die "Failed to install Google Chrome"
+        fi
     fi
 
     log_success "Google Chrome installed"

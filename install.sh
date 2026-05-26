@@ -42,12 +42,16 @@ Install and configure the browser-desktop kiosk workstation.
 Options:
   --create-user <username>   Create a kiosk user after installation
   --password <password>      Password for the new kiosk user (used with --create-user)
+  --chrome-package <path>    Install Chrome from a local .deb/.rpm file or directory
+                             (required in air-gapped / offline environments)
   -h, --help                 Show this help message
 
 Examples:
   sudo $(basename "$0")
   sudo $(basename "$0") --create-user kiosk1
   sudo $(basename "$0") --create-user kiosk1 --password "secret123"
+  sudo $(basename "$0") --chrome-package /tmp/google-chrome-stable_current_amd64.deb
+  sudo $(basename "$0") --chrome-package /opt/chrome-packages/
 USAGE
 }
 
@@ -58,6 +62,7 @@ USAGE
 main() {
     local create_user=""
     local user_password=""
+    CHROME_PACKAGE=""
 
     # Parse arguments
     while [[ $# -gt 0 ]]; do
@@ -73,6 +78,13 @@ main() {
                 user_password="${2:-}"
                 if [[ -z "$user_password" ]]; then
                     die "--password requires a value"
+                fi
+                shift 2
+                ;;
+            --chrome-package)
+                CHROME_PACKAGE="${2:-}"
+                if [[ -z "$CHROME_PACKAGE" ]]; then
+                    die "--chrome-package requires a file or directory path"
                 fi
                 shift 2
                 ;;

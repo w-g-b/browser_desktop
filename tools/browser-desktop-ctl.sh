@@ -262,13 +262,203 @@ cmd_reset_user() {
 }
 
 ###############################################################################
-# Apply Command (stub - implemented in Task 16)
+# Apply Command - Regenerate Chrome policy and portal page from whitelist
 ###############################################################################
+
+# Read whitelist URLs (skip comments and blank lines)
+# Arguments:
+#   $1 - "all" to include file:// URLs, "web" to skip them
+# Outputs URLs on stdout, one per line
+_read_whitelist() {
+    local mode="${1:-all}"
+
+    if [[ ! -f "$WHITELIST_CONF" ]]; then
+        return 0
+    fi
+
+    while IFS= read -r line; do
+        # Skip empty lines and comments
+        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+        # In "web" mode, skip file:// URLs
+        if [[ "$mode" == "web" && "$line" =~ ^file:// ]]; then
+            continue
+        fi
+        echo "$line"
+    done < "$WHITELIST_CONF"
+}
+
+# Generate /etc/opt/chrome/policies/managed/browser-desktop.json
+# Merges whitelist URLs into URLAllowlist while preserving other policy fields
+# from the config/chrome/managed-policy.json template.
+generate_chrome_policy() {
+    local portal_url="file:///opt/browser-desktop/portal/*"
+
+    # Collect whitelist URLs
+    local urls=()
+    while IFS= read -r url; do
+        [[ -n "$url" ]] && urls+=("$url")
+    done < <(_read_whitelist "all")
+
+    # Ensure portal URL is always present
+    local has_portal=false
+    for u in "${urls[@]}"; do
+        [[ "$u" == "$portal_url" ]] && { has_portal=true; break; }
+    done
+    if ! $has_portal; then
+        urls+=("$portal_url")
+    fi
+
+    # Ensure output directory exists
+    ensure_dir "$CHROME_POLICY_DIR"
+
+    # Build the policy JSON
+    {
+        echo "{"
+        echo '  "URLBlocklist": ["*"],'
+        echo '  "URLAllowlist": ['
+
+        local total=${#urls[@]}
+        local i=0
+        for url in "${urls[@]}"; do
+            i=$((i + 1))
+            if [[ $i -lt $total ]]; then
+                echo "    \"${url}\","
+            else
+                echo "    \"${url}\""
+            fi
+        done
+
+        echo '  ],'
+
+        # Include remaining policies from template (skip URLBlocklist, URLAllowlist, braces)
+        if [[ -f "$POLICY_TEMPLATE" ]]; then
+            awk '
+                /^\s*\{/ { next }
+                /^\s*\}/ { next }
+                /"URLBlocklist"/ { next }
+                /"URLAllowlist"/ {
+                    while (getline > 0 && !/\]/) {}
+                    next
+                }
+                { print }
+            ' "$POLICY_TEMPLATE"
+        fi
+
+        echo "}"
+    } > "$CHROME_POLICY_FILE"
+
+    log_success "Generated Chrome policy: $CHROME_POLICY_FILE"
+}
+
+# Extract display name from a URL (domain without *. prefix)
+_extract_display_name() {
+    local url="$1"
+    local domain
+
+    # Strip protocol
+    domain="${url#*://}"
+    # Strip path
+    domain="${domain%%/*}"
+    # Strip wildcard prefix
+    domain="${domain#\*.}"
+
+    echo "$domain"
+}
+
+# Choose an icon emoji based on the URL domain
+_choose_icon() {
+    local url="$1"
+    local lower
+    lower="$(echo "$url" | tr '[:upper:]' '[:lower:]')"
+
+    if [[ "$lower" == *google* ]]; then
+        echo "🔍"
+    elif [[ "$lower" == *github* ]]; then
+        echo "💻"
+    else
+        echo "🌐"
+    fi
+}
+
+# Generate /opt/browser-desktop/portal/index.html
+# Creates a card-based portal page from whitelist URLs.
+generate_portal_page() {
+    # Collect web URLs only (skip file://)
+    local urls=()
+    while IFS= read -r url; do
+        [[ -n "$url" ]] && urls+=("$url")
+    done < <(_read_whitelist "web")
+
+    # Ensure output directory exists
+    ensure_dir "$PORTAL_DIR"
+
+    # Build card HTML
+    local cards=""
+    if [[ ${#urls[@]} -gt 0 ]]; then
+        for url in "${urls[@]}"; do
+            local display_name
+            display_name="$(_extract_display_name "$url")"
+            local icon
+            icon="$(_choose_icon "$url")"
+
+            cards+="                <a class=\"portal-card\" href=\"${url}\">
+                    <div class=\"card-icon\">${icon}</div>
+                    <h2>${display_name}</h2>
+                    <p>${url}</p>
+                </a>
+"
+        done
+    else
+        cards+="                <div class=\"portal-card\">
+                    <div class=\"card-icon\">&#9888;</div>
+                    <h2>Portal Not Configured</h2>
+                    <p>No portal entries have been configured. Please contact your system administrator.</p>
+                </div>
+"
+    fi
+
+    # Write complete HTML page
+    cat > "$PORTAL_INDEX" <<HTML
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Workstation</title>
+    <link rel="stylesheet" href="css/portal.css">
+</head>
+<body>
+    <div class="container">
+        <header class="portal-header">
+            <h1>Browser Workstation</h1>
+            <p class="subtitle">Select an application to continue</p>
+        </header>
+
+        <main class="portal-main">
+            <div class="portal-grid">
+${cards}            </div>
+        </main>
+
+        <footer class="portal-footer">
+            <p>&copy; Browser Workstation</p>
+        </footer>
+    </div>
+
+    <script src="js/portal.js"></script>
+</body>
+</html>
+HTML
+
+    log_success "Generated portal page: $PORTAL_INDEX"
+}
 
 cmd_apply() {
     log_info "Applying configuration..."
-    # TODO: Task 16 - implement generate_chrome_policy and generate_portal_page
-    log_warn "apply command is not yet fully implemented (Task 16)"
+
+    generate_chrome_policy
+    generate_portal_page
+
+    log_success "Configuration applied successfully"
 }
 
 ###############################################################################

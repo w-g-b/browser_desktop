@@ -1,11 +1,11 @@
 {
   "URLBlocklist": ["*"],
   "URLAllowlist": [
-    "file:///opt/browser-desktop/portal/*"
+    "http://127.0.0.1:9080/*"
   ],
-  "HomepageLocation": "file:///opt/browser-desktop/portal/index.html",
+  "HomepageLocation": "http://127.0.0.1:9080/index.html",
   "RestoreOnStartup": 4,
-  "RestoreOnStartupURLs": ["file:///opt/browser-desktop/portal/index.html"],
+  "RestoreOnStartupURLs": ["http://127.0.0.1:9080/index.html"],
   "BookmarkBarEnabled": false,
   "EditBookmarksEnabled": false,
   "IncognitoModeAvailability": 1,
@@ -33,5 +33,5 @@
   "HideWebStoreIcon": true,
   "ShowHomeButton": false,
   "HomepageIsNewTabPage": false,
-  "NewTabPageLocation": "file:///opt/browser-desktop/portal/index.html"
+  "NewTabPageLocation": "http://127.0.0.1:9080/index.html"
 }

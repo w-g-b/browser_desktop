@@ -5,7 +5,8 @@
 # DO NOT use set -e - we want the session to stay alive even if individual commands fail
 
 # Configuration
-PORTAL_URL="file:///opt/browser-desktop/portal/index.html"
+PORTAL_PORT=9080
+PORTAL_URL="http://127.0.0.1:${PORTAL_PORT}/index.html"
 CHROME_DATA_DIR="$HOME/.chrome-kiosk"
 SESSION_CONF="/etc/browser-desktop/session.conf"
 LOG_FILE="$HOME/.browser-desktop-session.log"
@@ -120,6 +121,17 @@ log "Browser version: $($CHROME_BIN --version 2>&1 || echo 'unknown')"
 if [[ ! -f "/opt/browser-desktop/portal/index.html" ]]; then
     log "WARNING: Portal page not found at /opt/browser-desktop/portal/index.html"
     log "Chrome will start but may show an error page"
+fi
+
+# Start local portal HTTP server if not already running
+PORTAL_SERVER="/opt/browser-desktop/bin/portal-server.sh"
+if [[ -x "$PORTAL_SERVER" ]]; then
+    log "Starting portal HTTP server on port $PORTAL_PORT..."
+    "$PORTAL_SERVER" start "$PORTAL_PORT" >>"$LOG_FILE" 2>&1
+    sleep 1
+    log "Portal server ready at $PORTAL_URL"
+else
+    log "WARNING: Portal server not found at $PORTAL_SERVER"
 fi
 
 # Start Openbox window manager in background

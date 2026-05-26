@@ -40,6 +40,9 @@ install_base_packages() {
     log_info "Installing Openbox..."
     yum install -y openbox || die "Failed to install Openbox"
 
+    log_info "Installing Python3 (portal HTTP server)..."
+    yum install -y python3 || die "Failed to install Python3"
+
     # PulseAudio installation is optional; warn but do not abort on failure
     log_info "Installing PulseAudio..."
     if yum install -y pulseaudio; then

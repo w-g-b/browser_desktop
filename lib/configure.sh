@@ -95,6 +95,12 @@ deploy_browser_desktop() {
         "${BROWSER_DESKTOP_DIR}/bin/start-session.sh" \
         0755
 
+    # Install portal HTTP server
+    install_file \
+        "${PROJECT_DIR}/tools/portal-server.sh" \
+        "${BROWSER_DESKTOP_DIR}/bin/portal-server.sh" \
+        0755
+
     # Install portal files
     install_file \
         "${PROJECT_DIR}/portal/index.html" \

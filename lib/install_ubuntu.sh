@@ -32,6 +32,9 @@ install_base_packages() {
     log_info "Installing Openbox..."
     DEBIAN_FRONTEND=noninteractive apt-get install -y openbox
 
+    log_info "Installing Python3 (portal HTTP server)..."
+    DEBIAN_FRONTEND=noninteractive apt-get install -y python3
+
     # PulseAudio installation is optional; warn but do not abort on failure
     log_info "Installing PulseAudio..."
     if DEBIAN_FRONTEND=noninteractive apt-get install -y pulseaudio; then

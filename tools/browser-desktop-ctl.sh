@@ -297,7 +297,7 @@ _read_whitelist() {
 # Merges whitelist URLs into URLAllowlist while preserving other policy fields
 # from the config/chrome/managed-policy.json template.
 generate_chrome_policy() {
-    local portal_url="file:///opt/browser-desktop/portal/*"
+    local portal_url="http://127.0.0.1:9080/*"
 
     # Collect whitelist URLs
     local urls=()

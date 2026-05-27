@@ -297,71 +297,13 @@ _read_whitelist() {
 # Merges whitelist URLs into URLAllowlist while preserving other policy fields
 # from the config/chrome/managed-policy.json template.
 generate_chrome_policy() {
-    local portal_url="http://127.0.0.1:9080/*"
-    local portal_fallback="file:///opt/browser-desktop/portal/*"
-
-    # Collect whitelist URLs
-    local urls=()
-    while IFS= read -r url; do
-        [[ -n "$url" ]] && urls+=("$url")
-    done < <(_read_whitelist "all")
-
-    # Ensure portal URL is always present
-    local has_portal=false
-    for u in "${urls[@]}"; do
-        [[ "$u" == "$portal_url" ]] && { has_portal=true; break; }
-    done
-    if ! $has_portal; then
-        urls+=("$portal_url")
-    fi
-
-    # Ensure file:// fallback is always present
-    local has_fallback=false
-    for u in "${urls[@]}"; do
-        [[ "$u" == "$portal_fallback" ]] && { has_fallback=true; break; }
-    done
-    if ! $has_fallback; then
-        urls+=("$portal_fallback")
-    fi
-
     # Ensure output directory exists
     ensure_dir "$CHROME_POLICY_DIR"
 
-    # Build the policy JSON
-    {
-        echo "{"
-        echo '  "URLBlocklist": ["*"],'
-        echo '  "URLAllowlist": ['
-
-        local total=${#urls[@]}
-        local i=0
-        for url in "${urls[@]}"; do
-            i=$((i + 1))
-            if [[ $i -lt $total ]]; then
-                echo "    \"${url}\","
-            else
-                echo "    \"${url}\""
-            fi
-        done
-
-        echo '  ],'
-
-        # Include remaining policies from template (skip URLBlocklist, URLAllowlist, braces)
-        if [[ -f "$POLICY_TEMPLATE" ]]; then
-            awk '
-                /^\s*\{/ { next }
-                /^\s*\}/ { next }
-                /"URLBlocklist"/ { next }
-                /"URLAllowlist"/ {
-                    while (getline > 0 && !/\]/) {}
-                    next
-                }
-                { print }
-            ' "$POLICY_TEMPLATE"
-        fi
-
-        echo "}"
-    } > "$CHROME_POLICY_FILE"
+    # Copy template as-is (no URL filtering by default)
+    if [[ -f "$POLICY_TEMPLATE" ]]; then
+        cp "$POLICY_TEMPLATE" "$CHROME_POLICY_FILE"
+    fi
 
     log_success "Generated Chrome policy: $CHROME_POLICY_FILE"
 }

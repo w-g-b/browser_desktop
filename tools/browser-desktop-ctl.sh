@@ -448,6 +448,10 @@ generate_portal_page() {
         <header class="portal-header">
             <h1>Browser Workstation</h1>
             <p class="subtitle">Select an application to continue</p>
+            <div class="search-bar">
+                <input type="text" id="url-input" placeholder="Enter web address (e.g. https://example.com)" autocomplete="off" spellcheck="false">
+                <button id="go-btn" type="button">Go</button>
+            </div>
         </header>
 
         <main class="portal-main">

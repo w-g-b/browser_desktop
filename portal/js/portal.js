@@ -1,4 +1,36 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // ---- URL search bar ----
+    var urlInput = document.getElementById('url-input');
+    var goBtn = document.getElementById('go-btn');
+
+    function navigateToUrl() {
+        var value = (urlInput.value || '').trim();
+        if (!value) {
+            return;
+        }
+        // Auto-add protocol if missing
+        if (!/^https?:\/\//i.test(value)) {
+            value = 'https://' + value;
+        }
+        window.location.href = value;
+    }
+
+    if (urlInput) {
+        urlInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                navigateToUrl();
+            }
+        });
+    }
+    if (goBtn) {
+        goBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            navigateToUrl();
+        });
+    }
+
+    // ---- Portal cards ----
     var cards = Array.prototype.slice.call(
         document.querySelectorAll('.portal-card[href]')
     );

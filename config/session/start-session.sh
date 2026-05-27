@@ -125,13 +125,34 @@ fi
 
 # Start local portal HTTP server if not already running
 PORTAL_SERVER="/opt/browser-desktop/bin/portal-server.sh"
+PORTAL_READY=false
 if [[ -x "$PORTAL_SERVER" ]]; then
     log "Starting portal HTTP server on port $PORTAL_PORT..."
     "$PORTAL_SERVER" start "$PORTAL_PORT" >>"$LOG_FILE" 2>&1
-    sleep 1
-    log "Portal server ready at $PORTAL_URL"
+    # Wait up to 5 seconds for portal server to be ready
+    for i in 1 2 3 4 5; do
+        if curl -s -o /dev/null "http://127.0.0.1:${PORTAL_PORT}/" 2>/dev/null; then
+            PORTAL_READY=true
+            break
+        fi
+        # Fallback: check if the process is at least running
+        if python3 -c "import socket; s=socket.socket(); s.settimeout(1); s.connect(('127.0.0.1',${PORTAL_PORT})); s.close()" 2>/dev/null; then
+            PORTAL_READY=true
+            break
+        fi
+        sleep 1
+    done
+    if $PORTAL_READY; then
+        log "Portal server ready at $PORTAL_URL"
+    else
+        log "WARNING: Portal server may not have started, checking process..."
+        "$PORTAL_SERVER" status >>"$LOG_FILE" 2>&1 || true
+        log "Falling back to file:// protocol for portal page"
+        PORTAL_URL="file:///opt/browser-desktop/portal/index.html"
+    fi
 else
     log "WARNING: Portal server not found at $PORTAL_SERVER"
+    PORTAL_URL="file:///opt/browser-desktop/portal/index.html"
 fi
 
 # Start Openbox window manager in background
@@ -179,6 +200,7 @@ while [[ $CHROME_RESTART_COUNT -lt $MAX_RESTARTS ]]; do
         --user-data-dir="$CHROME_DATA_DIR" \
         --disable-gpu \
         --no-sandbox \
+        --allow-file-access-from-files \
         "$PORTAL_URL" \
         >>"$LOG_FILE" 2>&1
 

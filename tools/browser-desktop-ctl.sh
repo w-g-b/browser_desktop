@@ -298,6 +298,7 @@ _read_whitelist() {
 # from the config/chrome/managed-policy.json template.
 generate_chrome_policy() {
     local portal_url="http://127.0.0.1:9080/*"
+    local portal_fallback="file:///opt/browser-desktop/portal/*"
 
     # Collect whitelist URLs
     local urls=()
@@ -312,6 +313,15 @@ generate_chrome_policy() {
     done
     if ! $has_portal; then
         urls+=("$portal_url")
+    fi
+
+    # Ensure file:// fallback is always present
+    local has_fallback=false
+    for u in "${urls[@]}"; do
+        [[ "$u" == "$portal_fallback" ]] && { has_fallback=true; break; }
+    done
+    if ! $has_fallback; then
+        urls+=("$portal_fallback")
     fi
 
     # Ensure output directory exists

@@ -1,7 +1,8 @@
 {
   "URLBlocklist": ["*"],
   "URLAllowlist": [
-    "http://127.0.0.1:9080/*"
+    "http://127.0.0.1:9080/*",
+    "file:///opt/browser-desktop/portal/*"
   ],
   "HomepageLocation": "http://127.0.0.1:9080/index.html",
   "RestoreOnStartup": 4,

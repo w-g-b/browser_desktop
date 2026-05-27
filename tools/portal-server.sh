@@ -10,8 +10,19 @@
 
 PORTAL_DIR="/opt/browser-desktop/portal"
 DEFAULT_PORT=9080
-PID_FILE="/run/browser-desktop-portal.pid"
-LOG_FILE="/var/log/browser-desktop-portal.log"
+
+# PID and log files must be writable by the session user (not root)
+# Use per-user paths so multiple users can each run their own portal server
+_UID="$(id -u 2>/dev/null || echo 0)"
+if [[ "$_UID" -eq 0 ]]; then
+    PID_FILE="/run/browser-desktop-portal.pid"
+    LOG_FILE="/var/log/browser-desktop-portal.log"
+else
+    _USER_RUN_DIR="${HOME:-/tmp}/.browser-desktop"
+    mkdir -p "$_USER_RUN_DIR" 2>/dev/null || true
+    PID_FILE="${_USER_RUN_DIR}/portal.pid"
+    LOG_FILE="${_USER_RUN_DIR}/portal.log"
+fi
 
 # Find Python interpreter
 find_python() {
@@ -32,6 +43,12 @@ start() {
         return 1
     fi
 
+    # Check if port is already in use (another user's portal server is fine - same content)
+    if "$python_bin" -c "import socket; s=socket.socket(); s.settimeout(1); s.connect(('127.0.0.1',${port})); s.close()" 2>/dev/null; then
+        echo "Portal server already accessible on port $port (reusing existing instance)"
+        return 0
+    fi
+
     if [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
         echo "Portal server already running (PID $(cat "$PID_FILE"))"
         return 0
@@ -39,10 +56,18 @@ start() {
 
     cd "$PORTAL_DIR" || { echo "ERROR: Portal directory not found: $PORTAL_DIR" >&2; return 1; }
 
-    nohup "$python_bin" -m http.server "$port" \
-        --bind 127.0.0.1 \
-        --directory "$PORTAL_DIR" \
-        >> "$LOG_FILE" 2>&1 &
+    # Use --directory if supported (Python 3.7+), otherwise rely on cd above
+    if "$python_bin" -m http.server --help 2>&1 | grep -q -- '--directory'; then
+        nohup "$python_bin" -m http.server "$port" \
+            --bind 127.0.0.1 \
+            --directory "$PORTAL_DIR" \
+            >> "$LOG_FILE" 2>&1 &
+    else
+        # Fallback: already cd'd to PORTAL_DIR above
+        nohup "$python_bin" -m http.server "$port" \
+            --bind 127.0.0.1 \
+            >> "$LOG_FILE" 2>&1 &
+    fi
     echo $! > "$PID_FILE"
     echo "Portal server started on http://127.0.0.1:${port} (PID $(cat "$PID_FILE"))"
 }
